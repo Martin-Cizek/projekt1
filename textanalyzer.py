@@ -1,7 +1,10 @@
 '''
 author = Martin Cizek 
 '''
+#----------------------------------------------------------------------------
+import re
 import string
+#----------------------------------------------------------------------------
 
 TEXTS = ['''
 Situated about 10 miles west of Kemmerer, 
@@ -32,10 +35,12 @@ other freshwater genera and herring similar to those
 in modern oceans. Other fish such as paddlefish, 
 garpike and stingray are also present.'''
 ]
+#----------------------------------------------------------------------------
 ODDEL = 80*'-'
 CREDENTIALS = {'bob':'123', 'ann':'pass123','mike':'password123', 'liz':'pass123'}
 #----------------------------------------------------------------------------
 #prevedeni stringu na integer s odchycenim chyby
+#pri odchycene chybe vraci defaultni hodnotu defaultv
 def str2intdef(int_str, defaultv):
     try:
         i=int(int_str)
@@ -54,7 +59,7 @@ def clean_text(text_in):
 #analyza listu slov
 def analyze_words(words_in):
     #inicializace pocitadel
-    N_words = len(words_in)
+    N_words = 0  
     N_titlecase_words = 0   #pocet slov zacinajicich velkym pismenem
     N_uppercase_words = 0   #pocet slov psanych velkymi pismeny
     N_lowercase_words = 0   #pocet slov psanych malymi pismeny
@@ -64,28 +69,31 @@ def analyze_words(words_in):
     #analyza textu
     for wrd in words_in:
         wrd_len = len(wrd)
-        wrd_lengths[wrd_len]=wrd_lengths.setdefault(wrd_len, 0)+1
-        if wrd.istitle(): 
-            N_titlecase_words += 1 
-        elif wrd.isupper(): 
-            N_uppercase_words += 1
-        elif wrd.islower():
-            N_lowercase_words += 1
-        elif wrd.isnumeric():
-            N_numbers += 1
-            numbers_sum += int(wrd)
+        #pokud je slovo delsi nez 0 znaku, provedeme analyzu a zapocitame ho
+        if (wrd_len>0):
+            N_words += 1
+            wrd_lengths[wrd_len]=wrd_lengths.setdefault(wrd_len, 0)+1
+            if wrd.istitle(): 
+                N_titlecase_words += 1 
+            elif wrd.isupper(): 
+                N_uppercase_words += 1
+            elif wrd.islower():
+                N_lowercase_words += 1
+            elif wrd.isnumeric():
+                N_numbers += 1
+                numbers_sum += int(wrd)
     
     #serazeni slovniku delek slov od nejkratsiho po nejdelsi
     wrd_lengths = dict(sorted(wrd_lengths.items()))
     
-    dict_out=dict();
-    dict_out['N_words']=N_words
-    dict_out['N_titlecase_words']=N_titlecase_words
-    dict_out['N_uppercase_words']=N_uppercase_words
-    dict_out['N_lowercase_words']=N_lowercase_words
-    dict_out['N_numbers']=N_numbers
-    dict_out['numbers_sum']=numbers_sum
-    dict_out['wrd_lengths']=wrd_lengths    
+    dict_out = dict();
+    dict_out['N_words'] = N_words
+    dict_out['N_titlecase_words'] = N_titlecase_words
+    dict_out['N_uppercase_words'] = N_uppercase_words
+    dict_out['N_lowercase_words'] = N_lowercase_words
+    dict_out['N_numbers'] = N_numbers
+    dict_out['numbers_sum'] = numbers_sum
+    dict_out['wrd_lengths'] = wrd_lengths    
     return dict_out
 #----------------------------------------------------------------------------    
 
@@ -133,15 +141,16 @@ def text_analyzer_main():
     str_clean = clean_text(TEXTS[selection])
     
     #rozdeleni stringu do listu slov, odeleovacem je mezera
-    words = str_clean.split(' ')
-    
+    #re.split si poradi i s vicenasobnymi mezerami a neprida do listu slova o delce 0 znaku    
+    words = re.split(' +',str_clean)
+        
     #analyza listu slov    
     wrd_analysis = analyze_words(words)
         
     #kontrolni vypisy
     #print(f'Ocisteny string s textem:\n{str_clean}\n')
     #print(f'List jednotlivych slov:\n{words}\n')
-    #print(wrd_analysis)
+    #print(f'Vysledek analyzy:\n{wrd_analysis}\n')
         
     #zobrazeni vysledku
     print(f"Pocet slov v textu: {wrd_analysis['N_words']}")
@@ -151,21 +160,23 @@ def text_analyzer_main():
     print(f"Pocet cisel: {wrd_analysis['N_numbers']}")
     print(f"Soucet vsech cisel: {wrd_analysis['numbers_sum']}\n")
     
-    #*** Vystup do tabulky ***
-    #maximalni sirka prostredniho sloupce
-    max_count = max(wrd_analysis['wrd_lengths'].values())
-    #format radku tabulky
-    fmt_string_row= "{:>4} {:<" + str(max_count) + "} {:<4}"
-    #format zahlavi tabulky
-    fmt_string_hdr= "{:>4} {:^" + str(max_count) + "} {:<4}"
-    #vypis zahlavi a radku tabulky
-    print(ODDEL)
-    print(fmt_string_hdr.format('LEN|','OCCURENCES','|NR.'))
-    print(ODDEL)
-    for wrd_len in wrd_analysis['wrd_lengths'].keys():   
-        print(fmt_string_row.format(f'{wrd_len}|', 
-            wrd_analysis['wrd_lengths'][wrd_len]*'*', 
-            f"|{wrd_analysis['wrd_lengths'][wrd_len]}"))
+    #pokud text obsahuje alespon 1 slovo, zobrazime tebulku
+    if (wrd_analysis['N_words']>0):    
+        #*** Vystup do tabulky ***
+        #maximalni sirka prostredniho sloupce
+        max_count = max(wrd_analysis['wrd_lengths'].values())
+        #format radku tabulky
+        fmt_string_row= "{:>4} {:<" + str(max_count) + "} {:<4}"
+        #format zahlavi tabulky
+        fmt_string_hdr= "{:>4} {:^" + str(max_count) + "} {:<4}"
+        #vypis zahlavi a radku tabulky
+        print(ODDEL)
+        print(fmt_string_hdr.format('LEN|','OCCURENCES','|NR.'))
+        print(ODDEL)
+        for wrd_len in wrd_analysis['wrd_lengths'].keys():   
+            print(fmt_string_row.format(f'{wrd_len}|', 
+                wrd_analysis['wrd_lengths'][wrd_len]*'*', 
+                f"|{wrd_analysis['wrd_lengths'][wrd_len]}"))
 
 
 #----------------------------------------------------------------------------        
