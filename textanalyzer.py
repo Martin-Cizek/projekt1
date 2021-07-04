@@ -160,7 +160,7 @@ def text_analyzer_main():
     print(f"Pocet cisel: {wrd_analysis['N_numbers']}")
     print(f"Soucet vsech cisel: {wrd_analysis['numbers_sum']}\n")
     
-    #pokud text obsahuje alespon 1 slovo, zobrazime tebulku
+    #pokud text obsahuje alespon 1 slovo, zobrazime tabulku
     if (wrd_analysis['N_words']>0):    
         #*** Vystup do tabulky ***
         #maximalni sirka prostredniho sloupce
